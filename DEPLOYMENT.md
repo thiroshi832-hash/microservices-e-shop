@@ -296,6 +296,33 @@ docker-compose exec user-service npx prisma studio
 # Opens http://localhost:5555
 ```
 
+### Migration Strategy
+
+The current setup uses `prisma db push` for schema synchronization, which is suitable for development and simple deployments.
+
+For **production**, consider using Prisma Migrate for versioned migrations:
+
+1. **Generate migration locally**:
+```bash
+cd services/user-service
+npx prisma migrate dev --name init
+```
+
+2. **Commit migration files** (in `prisma/migrations/`)
+
+3. **Apply in production**:
+```bash
+# Docker entrypoint script
+npx prisma migrate deploy
+```
+
+Update Dockerfile CMD to:
+```dockerfile
+CMD ["sh", "-c", "npx prisma migrate deploy && node index.js"]
+```
+
+This ensures controlled, reversible schema changes.
+
 ## Scaling
 
 ### Horizontal Scaling
