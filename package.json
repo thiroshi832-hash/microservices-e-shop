@@ -21,6 +21,8 @@
     "test": "cd frontend && npm test",
     "lint": "echo 'No root lint configured'",
     "commitlint": "commitlint --edit",
+    "prepare": "husky install",
+    "postinstall": "husky install",
     "version": "standard-version",
     "release:patch": "standard-version --release-as patch",
     "release:minor": "standard-version --release-as minor",
