@@ -39,15 +39,42 @@ Follow **Conventional Commits** format:
 ```
 type(scope): description
 
-Types:
-- feat: new feature
-- fix: bug fix
-- docs: documentation changes
-- style: formatting, missing semicolons (no code change)
-- refactor: code restructuring (no new feature/bug fix)
-- perf: performance improvements
-- test: adding tests
-- chore: maintenance tasks, dependency updates
+[optional body]
+
+[optional footer]
+```
+
+**Required Types**:
+- `feat`: New feature (triggers MINOR version)
+- `fix`: Bug fix (triggers PATCH version)
+- `docs`: Documentation changes
+- `style`: Code style/formatting
+- `refactor`: Code restructuring (no new feature/bug)
+- `perf`: Performance improvements
+- `test`: Add or update tests
+- `chore`: Maintenance tasks, dependency updates
+- `revert`: Revert a previous commit
+- `build`: Build system changes
+- `ci`: CI/CD changes
+
+**Breaking changes**: Add `!` after type/scope to indicate MAJOR version bump:
+```
+feat(auth)!: remove username field
+
+BREAKING CHANGE: Username removed from registration, use email only.
+```
+
+Examples:
+```bash
+feat(products): add category filtering
+fix(orders): resolve order duplication bug
+docs: update installation guide
+```
+
+**Scope** (optional): Service name or component affected:
+- `user-service`, `product-service`, `order-service`
+- `api-gateway`, `event-bus`, `frontend`
+- `shared`, `docker`, `ci`
 - revert: revert previous commit
 ```
 
@@ -110,6 +137,73 @@ git push origin feature/your-feature-name
 git checkout main
 git pull origin main
 git branch -d feature/your-feature-name  # delete local branch
+```
+
+## Automated Version Management
+
+This project uses automated version management with **standard-version**, **commitlint**, and **Husky**.
+
+### Tools Setup
+
+All tools are pre-configured:
+- **commitlint**: Validates commit message format
+- **Husky**: Git hooks manager (runs commitlint before commits)
+- **standard-version**: Automates version bumping and changelog generation
+
+### Enabling Husky Hooks
+
+```bash
+# Install dependencies (includes dev dependencies)
+npm install
+
+# Activate Husky (creates .husky/ directory)
+npx husky install
+
+# Hooks are automatically installed via prepare script
+# commit-msg hook validates all commit messages
+```
+
+### Version Commands
+
+```bash
+# See what would be released (dry-run)
+npx standard-version --dry-run
+
+# Create release (auto-detect version bump)
+npm run version
+
+# Explicit version bumps
+npm run release:patch    # 1.0.0 → 1.0.1
+npm run release:minor    # 1.0.0 → 1.1.0
+npm run release:major    # 1.0.0 → 2.0.0
+
+# Specific version
+npm run release:specified -- 2.0.0
+
+# Push with tags
+git push --follow-tags origin main
+```
+
+### What standard-version Does
+
+1. Reads commit messages since last tag
+2. Determines version bump (major/minor/patch) based on commit types
+3. Updates `package.json` versions (frontend and optionally others)
+4. Generates/updates `CHANGELOG.md`
+5. Commits changes with `chore(release): x.x.x`
+6. Creates Git tag `vx.x.x`
+
+### Pre-commit Validation
+
+Husky automatically validates commit messages:
+```
+❌ "fixed bug"           → rejected
+✅ "fix(orders): prevent duplicate orders" → accepted
+```
+
+**Bypass hook** (emergency only):
+```bash
+git commit -m "message" --no-verify
 ```
 
 ## Important: .gitignore

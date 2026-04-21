@@ -1,0 +1,63 @@
+{
+  "name": "node-microservices-ecommerce",
+  "version": "1.0.0",
+  "description": "Production-ready microservices e-commerce platform with React frontend and Node.js backend",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "services/*",
+      "api-gateway",
+      "event-bus",
+      "frontend"
+    ]
+  },
+  "scripts": {
+    "dev": "docker-compose up --build",
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "restart": "docker-compose restart",
+    "logs": "docker-compose logs -f",
+    "clean": "docker-compose down -v && docker system prune -f",
+    "test": "cd frontend && npm test",
+    "lint": "echo 'No root lint configured'",
+    "commitlint": "commitlint --edit",
+    "version": "standard-version",
+    "release:patch": "standard-version --release-as patch",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
+    "release:specified": "standard-version --release-as",
+    "prisma:generate": "lerna run prisma:generate --stream",
+    "prisma:push": "lerna run prisma:push --stream",
+    "prisma:studio": "lerna run prisma:studio --stream",
+    "install:all": "npm install && lerna bootstrap",
+    "setup": "bash scripts/setup.sh"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3",
+    "husky": "^8.0.3",
+    "standard-version": "^9.5.0",
+    "lerna": "^8.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/node-microservices-ecommerce.git"
+  },
+  "keywords": [
+    "microservices",
+    "ecommerce",
+    "node.js",
+    "react",
+    "typescript",
+    "postgresql",
+    "redis",
+    "docker",
+    "prisma"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

@@ -126,5 +126,16 @@ build/
 *.key
 *.crt
 
-# PLanetScale (database)
-.pscale/
+# Standard-version
+.changelog?rc
+
+# Husky
+.husky/
+
+# Commitlint
+.commitlintrc.js
+
+# Lerna
+lerna-debug.log
+.package-lock.json
+

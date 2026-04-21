@@ -64,17 +64,56 @@ A production-ready full-stack e-commerce platform built with microservices archi
 - **Icons**: Lucide React icon set
 - **Production Ready**: Optimized builds with Vite and Nginx
 
-## Services
+## Version Management
 
-| Service | Port | Description |
-|---------|------|-------------|
-| Frontend | 80 | React SPA with TypeScript and Tailwind |
-| API Gateway | 5000 | Entry point, authentication, routing |
-| User Service | 5001 | User registration, login, management |
-| Product Service | 5002 | Product catalog management |
-| Order Service | 5003 | Order creation and management |
-| PostgreSQL | 5432 | Database |
-| Redis | 6379 | Event bus and cache |
+This project uses [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/) for automated version management.
+
+### Release Process
+
+```bash
+# Check current version
+cat package.json | grep version
+
+# See commits since last release
+git log --oneline $(git describe --tags --abbrev=0)..HEAD
+
+# Create release
+npm run release:minor    # for new features
+npm run release:patch    # for bug fixes only
+npm run release:major    # for breaking changes
+
+# Or specify exact version
+npm run release:specified -- 1.2.3
+
+# Push to remote (includes tags)
+git push --follow-tags origin main
+```
+
+### Commit Message Format
+
+```
+type(scope): description
+
+feat(products): add product search by category
+fix(orders): resolve duplicate order creation bug
+docs: update API documentation
+```
+
+**Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `revert`, `build`, `ci`
+
+**Breaking change** (MAJOR bump):
+```
+feat(auth)!: remove username from registration
+
+BREAKING CHANGE: Username field removed, use email only
+```
+
+### Automated
+
+- `npm run version` - Standard version bump based on commits
+- `CHANGELOG.md` - Auto-generated from commit messages
+- Git tags - Auto-created (`v1.2.3`)
+- Pre-commit hooks - Enforce commit format
 
 ## Getting Started
 

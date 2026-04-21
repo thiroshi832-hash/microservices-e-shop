@@ -1,0 +1,41 @@
+{
+  "tagPrefix": "v",
+  "header": "# Changelog\n\nAll notable changes to this project will be documented in this file.",
+  "infile": "CHANGELOG.md",
+  "backfill": false,
+  "bumpFiles": [
+    {
+      "filename": "package.json",
+      "updater": false
+    },
+    {
+      "filename": "services/user-service/package.json",
+      "updater": false
+    },
+    {
+      "filename": "services/product-service/package.json",
+      "updater": false
+    },
+    {
+      "filename": "services/order-service/package.json",
+      "updater": false
+    },
+    {
+      "filename": "api-gateway/package.json",
+      "updater": false
+    },
+    {
+      "filename": "event-bus/package.json",
+      "updater": false
+    },
+    {
+      "filename": "frontend/package.json",
+      "updater": true
+    }
+  ],
+  "releaseCommitMessageFormat": "release: {{currentTag}}",
+  "commitBounds": {
+    "skipMergeCommits": true,
+    "skipTags": false
+  }
+}
