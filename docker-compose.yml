@@ -125,6 +125,18 @@ services:
       - PRODUCT_SERVICE_URL=http://product-service:5002
     restart: unless-stopped
 
+  # Frontend Service
+  frontend:
+    build: ./frontend
+    container_name: ecommerce-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:

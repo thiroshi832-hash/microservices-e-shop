@@ -1,54 +1,73 @@
 # Node.js Microservices E-commerce Platform
 
-A production-ready microservices e-commerce platform built with Node.js, Express, PostgreSQL, Redis, and Docker.
+A production-ready full-stack e-commerce platform built with microservices architecture, featuring a React TypeScript frontend and Node.js backend services.
 
 ## Architecture
 
 ```
-┌─────────────────┐
-│   API Gateway   │  ← External Entry Point (Port 5000)
-│   (Express)     │  - Rate limiting
-│   - Auth        │  - Request logging
-│   - Proxy       │  - JWT validation
-└────────┬────────┘
-         │
-    ┌────┴────┬───────────────┐
-    │         │               │
-    ▼         ▼               ▼
+┌──────────────┐
+│  Frontend    │  ← React SPA (Port 80)
+│   (React)    │  - Tailwind CSS
+│   - Router   │  - React Query
+└──────┬───────┘ - Protected routes
+       │
+       ▼
+┌──────────────┐
+│ API Gateway  │  ← Backend Entry (Port 5000)
+│  (Express)   │  - Rate limiting
+│   - Auth     │  - JWT validation
+│   - Proxy    │  - Request logging
+└──────┬───────┘
+       │
+┌──────┴────┬───────────────┐
+│           │               │
+▼           ▼               ▼
 ┌───────┐ ┌─────────┐  ┌──────────┐
 │ Users │ │Products │  │ Orders   │
 │ :5001 │ │  :5002  │  │  :5003   │
 └───────┘ └─────────┘  └──────────┘
-    │         │               │
-    └────┬────┴───────────────┘
-         │
-    ┌────▼─────────┐
-    │  PostgreSQL  │  ← Persistent Storage
-    │   (Port 5432)│
-    └──────────────┘
-         │
-    ┌────▼─────────┐
-    │     Redis    │  ← Event Bus & Caching
-    │   (Port 6379)│
-    └──────────────┘
+     │         │               │
+     └────┬────┴───────────────┘
+          │
+     ┌────▼─────────┐
+     │ PostgreSQL   │  ← Persistent Storage
+     │   (Port 5432)│
+     └──────────────┘
+          │
+     ┌────▼─────────┐
+     │     Redis    │  ← Event Bus & Caching
+     │   (Port 6379)│
+     └──────────────┘
 ```
 
 ## Features
 
-- **Authentication & Authorization**: JWT-based auth with role-based access control
-- **Service-to-Service Communication**: Secure internal communication
+### Backend Features
+- **Authentication & Authorization**: JWT-based auth with bcrypt password hashing
+- **Service-to-Service Communication**: Secure internal communication with error handling
 - **Event-Driven Architecture**: Redis Pub/Sub for events
-- **Database**: PostgreSQL for persistent data
-- **API Gateway**: Centralized routing, rate limiting, and security
-- **Logging**: Winston-based structured logging
-- **Input Validation**: Joi-based request validation
-- **Docker**: Containerized deployment with docker-compose
-- **Health Checks**: Built-in health endpoints for monitoring
+- **Database**: PostgreSQL with proper schemas, constraints, and indexes
+- **API Gateway**: Centralized routing, rate limiting, Helmet security, request logging
+- **Logging**: Winston structured logging with file rotation
+- **Input Validation**: Joi validation on all endpoints
+- **Docker**: Containerized deployment with health checks and dependencies
+
+### Frontend Features
+- **Modern React**: React 18 with TypeScript for type safety
+- **Styling**: Tailwind CSS for responsive design
+- **State Management**: Context API for auth and cart
+- **Data Fetching**: React Query for caching and synchronization
+- **Routing**: React Router v6 with protected routes
+- **Forms**: React Hook Form with validation
+- **Notifications**: React Hot Toast for user feedback
+- **Icons**: Lucide React icon set
+- **Production Ready**: Optimized builds with Vite and Nginx
 
 ## Services
 
 | Service | Port | Description |
 |---------|------|-------------|
+| Frontend | 80 | React SPA with TypeScript and Tailwind |
 | API Gateway | 5000 | Entry point, authentication, routing |
 | User Service | 5001 | User registration, login, management |
 | Product Service | 5002 | Product catalog management |
@@ -56,27 +75,54 @@ A production-ready microservices e-commerce platform built with Node.js, Express
 | PostgreSQL | 5432 | Database |
 | Redis | 6379 | Event bus and cache |
 
-## Quick Start with Docker
+## Getting Started
 
-1. Clone and navigate:
-```bash
-cd node-microservices-ecommerce
-```
-
-2. Build and start all services:
+### With Docker (Recommended)
 ```bash
 docker-compose up --build
 ```
+Visit http://localhost (frontend) or http://localhost:5000 (API)
 
-3. All services will be running:
+### Without Docker
+
+#### Backend
+```bash
+# Start PostgreSQL and Redis
+docker run -p 5432:5432 -e POSTGRES_PASSWORD=password123 -e POSTGRES_DB=ecommerce -d postgres:16-alpine
+docker run -p 6379:6379 -d redis:7-alpine
+
+# Install dependencies and start each service
+cd services/user-service && npm install && node index.js
+cd services/product-service && npm install && node index.js
+cd services/order-service && npm install && node index.js
+cd api-gateway && npm install && node index.js
+cd event-bus && npm install && node index.js
 ```
-Gateway:  http://localhost:5000
-Users:    http://localhost:5001
-Products: http://localhost:5002
-Orders:   http://localhost:5003
-Database: localhost:5432
-Redis:    localhost:6379
+
+#### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
 ```
+Visit http://localhost:3000
+
+## Frontend Routes
+
+The React frontend provides these pages:
+
+| Route | Description | Auth Required |
+|-------|-------------|---------------|
+| `/` | Home page with featured products | No |
+| `/products` | Product listing with filters | No |
+| `/products/:id` | Product detail page | No |
+| `/cart` | Shopping cart | No |
+| `/login` | User login | No |
+| `/register` | User registration | No |
+| `/checkout` | Complete order | Yes |
+| `/orders` | Order history | Yes |
+| `/orders/:id` | Order details | Yes |
+| `/profile` | User profile | Yes |
 
 ## API Endpoints
 
@@ -244,6 +290,8 @@ The system uses Redis Pub/Sub for event-driven communication:
 
 ## Local Development (Without Docker)
 
+### Backend Services
+
 1. Install dependencies for each service:
 ```bash
 cd services/user-service && npm install
@@ -253,7 +301,7 @@ cd ../../api-gateway && npm install
 cd ../event-bus && npm install
 ```
 
-2. Start PostgreSQL and Redis locally (using Docker):
+2. Start PostgreSQL and Redis:
 ```bash
 docker run -p 5432:5432 -e POSTGRES_PASSWORD=password123 -e POSTGRES_DB=ecommerce -d postgres:16-alpine
 docker run -p 6379:6379 -d redis:7-alpine
@@ -261,7 +309,7 @@ docker run -p 6379:6379 -d redis:7-alpine
 
 3. Create `.env` files in each service directory
 
-4. Run services individually:
+4. Run services:
 ```bash
 node services/user-service/index.js
 node services/product-service/index.js
@@ -270,13 +318,73 @@ node api-gateway/index.js
 node event-bus/index.js
 ```
 
+### Frontend Development
+
+1. Install frontend dependencies:
+```bash
+cd frontend
+npm install
+```
+
+2. Start development server:
+```bash
+npm run dev
+```
+
+The frontend will be available at http://localhost:3000 and will proxy API requests to http://localhost:5000.
+
+3. Build for production:
+```bash
+npm run build
+```
+
 ## Testing
+
+### Backend API Testing
 
 ### Example: Register User
 ```bash
 curl -X POST http://localhost:5000/users/register \
   -H "Content-Type: application/json" \
-  -d '{"name":"Test User","email":"test@example.com","password":"password123"}'
+  -d '{"name":"Test User","email":"test@test.com","password":"password123"}'
+```
+
+### Example: Login
+```bash
+curl -X POST http://localhost:5000/users/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"password123"}'
+```
+
+### Example: Create Product (requires auth)
+```bash
+TOKEN=<your-token>
+curl -X POST http://localhost:5000/products \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"name":"Test Product","price":99.99,"description":"A test product"}'
+```
+
+### Example: Create Order (requires auth)
+```bash
+TOKEN=<your-token>
+curl -X POST http://localhost:5000/orders \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"userId":1,"productId":1}'
+```
+
+### Frontend Testing
+
+Run frontend tests:
+```bash
+cd frontend
+npm test
+```
+
+Run tests with UI:
+```bash
+npm run test:ui
 ```
 
 ### Example: Login
@@ -322,33 +430,53 @@ curl -X POST http://localhost:5000/orders \
 
 ```
 node-microservices-ecommerce/
-├── api-gateway/          # API Gateway service
+├── frontend/                  # React frontend (TypeScript + Vite)
+│   ├── src/
+│   │   ├── components/       # Reusable UI components
+│   │   ├── contexts/         # React contexts (Auth, Cart)
+│   │   ├── pages/            # Page components
+│   │   ├── services/         # API client
+│   │   ├── types/            # TypeScript definitions
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── index.css
+│   ├── public/
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   ├── Dockerfile
+│   └── nginx.conf
+├── api-gateway/              # API Gateway service
 │   ├── index.js
 │   ├── package.json
 │   └── Dockerfile
 ├── services/
-│   ├── user-service/     # User management service
+│   ├── user-service/         # User management service
 │   │   ├── index.js
 │   │   ├── package.json
 │   │   └── Dockerfile
-│   ├── product-service/  # Product catalog service
+│   ├── product-service/      # Product catalog service
 │   │   ├── index.js
 │   │   ├── package.json
 │   │   └── Dockerfile
-│   └── order-service/    # Order processing service
+│   └── order-service/        # Order processing service
 │       ├── index.js
 │       ├── package.json
 │       └── Dockerfile
-├── event-bus/            # Redis-based event bus
+├── event-bus/                # Redis event bus
 │   ├── index.js
 │   ├── package.json
 │   └── Dockerfile
-├── shared/               # Shared utilities
-│   ├── db.js            # PostgreSQL connection
-│   ├── logger.js        # Winston logger
-│   └── validators.js    # Input validators
-├── docker-compose.yml    # Orchestration
-└── .env.example         # Environment template
+├── shared/                   # Shared utilities
+│   ├── db.js                # PostgreSQL connection
+│   ├── logger.js            # Winston logger
+│   └── validators.js        # Input validators
+├── docker-compose.yml        # Orchestration
+├── .env.example             # Environment template
+├── README.md
+├── CHANGELOG.md
+├── GIT_WORKFLOW.md
+└── setup-dev.{sh,bat}       # Dev setup scripts
 ```
 
 ## License
