@@ -1,5 +1,7 @@
 # Node.js Microservices E-commerce Platform
 
+**Version managed with [Semantic Versioning](VERSIONING.md) and [Conventional Commits](https://www.conventionalcommits.org/)**
+
 A production-ready full-stack e-commerce platform built with microservices architecture, featuring a React TypeScript frontend and Node.js backend services.
 
 ## Architecture
@@ -647,6 +649,13 @@ node-microservices-ecommerce/
 └── setup-dev.{sh,bat}       # Dev setup scripts
 ```
 
-## License
+## Documentation
 
-MIT
+- **README.md** - Project overview, setup, API docs
+- **VERSIONING.md** - Version management and release process
+- **MULTI_SERVICE_VERSIONS.md** - Managing versions across services
+- **GIT_WORKFLOW.md** - Git best practices and branching strategy
+- **CONTRIBUTING.md** - How to contribute to the project
+- **DEPLOYMENT.md** - Production deployment guide
+- **CHANGELOG.md** - Release history
+- **PROJECT_SUMMARY.md** - Complete project summary
