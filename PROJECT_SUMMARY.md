@@ -8,14 +8,18 @@ Your microservices e-commerce platform is now fully complete with both backend a
 
 ```
 Branch: master
-Commits: 6
+Commits: 10
 Total Files: 78
 ```
 
 ## Commit History
 
 ```
+fe50c48 docs: add Prisma migrate production strategy note
+6394c67 fix(deps): move prisma from devDependencies to dependencies for runtime
+0609906 docs: update project summary with Prisma migration stats
 3f9c1b0 feat(prisma): migrate all services from raw PostgreSQL to Prisma ORM
+fb7af6e docs: add project completion summary with full stack overview
 7ece0bb docs: update README and docker-compose with frontend integration
 6f9bb1a docs: add Makefile automation and production deployment guide
 959b050 feat(frontend): add React TypeScript frontend with Tailwind CSS and complete e-commerce UI
