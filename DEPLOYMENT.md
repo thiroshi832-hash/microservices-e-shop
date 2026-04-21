@@ -26,18 +26,29 @@ environment:
 
 ### 2. Database Configuration
 
-Change default PostgreSQL password in `docker-compose.yml`:
+The application uses Prisma ORM with PostgreSQL.
+
+**Update database password** in `docker-compose.yml`:
 ```yaml
 postgres:
   environment:
-    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Use env var
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 ```
 
-Create a `.env` file:
+**Set DATABASE_URL** for each service (already in docker-compose):
+```yaml
+user-service:
+  environment:
+    - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/ecommerce
+```
+
+**Create `.env` file** in project root:
 ```env
 POSTGRES_PASSWORD=your-secure-db-password
 JWT_SECRET=your-jwt-secret
 ```
+
+**Prisma migrations** are automatically applied on container startup via `npx prisma db push` in the Dockerfile. This creates/updates tables based on the Prisma schema.
 
 ### 3. Domain and SSL
 
@@ -275,6 +286,14 @@ gzip $BACKUP_DIR/db_backup_$DATE.sql
 Add to crontab:
 ```bash
 0 2 * * * /path/to/backup.sh
+```
+
+### Prisma Studio (Optional)
+
+Access Prisma Studio to browse data:
+```bash
+docker-compose exec user-service npx prisma studio
+# Opens http://localhost:5555
 ```
 
 ## Scaling

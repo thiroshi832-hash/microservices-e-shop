@@ -2,9 +2,8 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
-const db = require('../shared/db');
+const prisma = require('./prisma');
 const logger = require('../shared/logger');
-const validators = require('../shared/validators');
 const { publish } = require('../event-bus');
 
 const app = express();
@@ -54,22 +53,18 @@ const authorize = (...roles) => {
   };
 };
 
-// Initialize database tables
+// Initialize database (Prisma auto-creates tables on first connection)
 const initDB = async () => {
   try {
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        email VARCHAR(100) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        role VARCHAR(50) DEFAULT 'customer',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    logger.info('Users table initialized');
+    // Prisma will auto-create tables based on schema
+    // We can also seed initial data if needed
+    const userCount = await prisma.user.count();
+    if (userCount === 0) {
+      logger.info('No users found, database will be initialized on first connection');
+    }
+    logger.info('Database connection established');
   } catch (err) {
-    logger.error('Failed to initialize users table', { error: err.message });
+    logger.error('Failed to connect to database', { error: err.message });
     throw err;
   }
 };
@@ -84,19 +79,36 @@ app.post('/register', async (req, res) => {
 
     const { name, email, password, role = 'customer' } = req.body;
 
-    const existing = await db.query('SELECT id FROM users WHERE email = $1', [email]);
-    if (existing.rows.length > 0) {
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const result = await db.query(
-      'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role, created_at',
-      [name, email, hashedPassword, role]
-    );
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true
+      }
+    });
 
-    const user = result.rows[0];
+    // Generate JWT token
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       JWT_SECRET,
@@ -128,18 +140,23 @@ app.post('/login', async (req, res) => {
 
     const { email, password } = req.body;
 
-    const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-    if (result.rows.length === 0) {
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const user = result.rows[0];
+    // Verify password
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // Generate token
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       JWT_SECRET,
@@ -169,24 +186,50 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Get single user by ID
+// Get user by ID (protected)
 app.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await db.query(
-      'SELECT id, name, email, role, created_at FROM users WHERE id = $1',
-      [id]
-    );
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(id) },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true
+      }
+    });
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json(result.rows[0]);
+    res.json(user);
   } catch (err) {
     logger.error('Get user error', { error: err.message });
     res.status(500).json({ error: 'Failed to get user' });
+  }
+});
+
+// Get all users (admin only)
+app.get('/', authenticate, authorize('admin'), async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true
+      }
+    });
+    res.json(users);
+  } catch (err) {
+    logger.error('Get users error', { error: err.message });
+    res.status(500).json({ error: 'Failed to get users' });
   }
 });
 
@@ -199,19 +242,6 @@ app.get('/me', authenticate, (req, res) => {
   });
 });
 
-// Get all users (admin only)
-app.get('/', authenticate, authorize('admin'), async (req, res) => {
-  try {
-    const result = await db.query(
-      'SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC'
-    );
-    res.json(result.rows);
-  } catch (err) {
-    logger.error('Get users error', { error: err.message });
-    res.status(500).json({ error: 'Failed to get users' });
-  }
-});
-
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', service: 'user-service' });
@@ -221,11 +251,8 @@ app.get('/health', (req, res) => {
 const startServer = async () => {
   try {
     // Wait for DB connection
-    const dbConnected = await db.connectWithRetry();
-    if (!dbConnected) {
-      logger.error('Failed to connect to database after retries');
-      process.exit(1);
-    }
+    await prisma.$connect();
+    logger.info('Database connected');
 
     await initDB();
 
@@ -235,16 +262,18 @@ const startServer = async () => {
     });
 
     // Graceful shutdown
-    process.on('SIGTERM', () => {
+    process.on('SIGTERM', async () => {
       logger.info('SIGTERM received, shutting down gracefully');
+      await prisma.$disconnect();
       server.close(() => {
         logger.info('Server closed');
         process.exit(0);
       });
     });
 
-    process.on('SIGINT', () => {
+    process.on('SIGINT', async () => {
       logger.info('SIGINT received, shutting down gracefully');
+      await prisma.$disconnect();
       server.close(() => {
         logger.info('Server closed');
         process.exit(0);

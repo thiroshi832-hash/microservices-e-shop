@@ -43,10 +43,11 @@ A production-ready full-stack e-commerce platform built with microservices archi
 ## Features
 
 ### Backend Features
+- **ORM**: Prisma with auto-generated client, type-safe queries
 - **Authentication & Authorization**: JWT-based auth with bcrypt password hashing
 - **Service-to-Service Communication**: Secure internal communication with error handling
 - **Event-Driven Architecture**: Redis Pub/Sub for events
-- **Database**: PostgreSQL with proper schemas, constraints, and indexes
+- **Database**: PostgreSQL with Prisma ORM, auto-generated schema
 - **API Gateway**: Centralized routing, rate limiting, Helmet security, request logging
 - **Logging**: Winston structured logging with file rotation
 - **Input Validation**: Joi validation on all endpoints
@@ -263,6 +264,57 @@ The system uses Redis Pub/Sub for event-driven communication:
 - `ORDER_CREATED` - When an order is placed
 - `ORDER_STATUS_UPDATED` - When order status changes
 
+## Prisma ORM
+
+All services use Prisma as the ORM for database operations:
+
+- **Type-safe queries**: Full TypeScript support with autocompletion
+- **Auto-generated client**: Prisma Client generated from schema
+- **Migrations**: Database schema managed via Prisma Migrate or `db push`
+
+### Schema Locations
+
+Each service has its own Prisma schema:
+- `services/user-service/prisma/schema.prisma` - User model
+- `services/product-service/prisma/schema.prisma` - Product model
+- `services/order-service/prisma/schema.prisma` - Order model
+
+### Working with Prisma
+
+#### Update Schema
+Edit the `schema.prisma` file in the respective service.
+
+#### Generate Client
+```bash
+cd services/user-service
+npx prisma generate
+```
+
+#### Push Changes to Database
+```bash
+# Development (auto-migrate, may drop data)
+npx prisma db push
+
+# Production (use migrations)
+npx prisma migrate dev --name init
+```
+
+#### View Database in Prisma Studio
+```bash
+cd services/user-service
+npx prisma studio
+# Opens http://localhost:5555
+```
+
+### Database URL
+
+Prisma uses `DATABASE_URL` environment variable:
+```
+postgresql://user:password@host:port/database
+```
+
+This is set in `docker-compose.yml` and `.env` files.
+
 ## Production Considerations
 
 ### Security
@@ -307,9 +359,24 @@ docker run -p 5432:5432 -e POSTGRES_PASSWORD=password123 -e POSTGRES_DB=ecommerc
 docker run -p 6379:6379 -d redis:7-alpine
 ```
 
-3. Create `.env` files in each service directory
+3. Create `.env` files in each service directory (copy from `.env.example`)
 
-4. Run services:
+4. Generate Prisma client and push database schema:
+```bash
+cd services/user-service
+npx prisma generate
+npx prisma db push
+
+cd ../product-service
+npx prisma generate
+npx prisma db push
+
+cd ../order-service
+npx prisma generate
+npx prisma db push
+```
+
+5. Run services:
 ```bash
 node services/user-service/index.js
 node services/product-service/index.js
@@ -428,6 +495,68 @@ curl -X POST http://localhost:5000/orders \
 
 ## Project Structure
 
+```
+node-microservices-ecommerce/
+├── frontend/                  # React frontend (TypeScript + Vite)
+│   ├── src/
+│   │   ├── components/       # Reusable UI components
+│   │   ├── contexts/         # React contexts (Auth, Cart)
+│   │   ├── pages/            # Page components
+│   │   ├── services/         # API client
+│   │   ├── types/            # TypeScript definitions
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── index.css
+│   ├── public/
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   ├── Dockerfile
+│   └── nginx.conf
+├── api-gateway/              # API Gateway service
+│   ├── index.js
+│   ├── package.json
+│   └── Dockerfile
+├── services/
+│   ├── user-service/         # User management service
+│   │   ├── prisma/
+│   │   │   ├── schema.prisma # Prisma schema (User model)
+│   │   │   └── (migrations)  # Optional migrations
+│   │   ├── prisma.js         # Prisma client instance
+│   │   ├── index.js
+│   │   ├── package.json
+│   │   └── Dockerfile
+│   ├── product-service/      # Product catalog service
+│   │   ├── prisma/
+│   │   │   ├── schema.prisma # Prisma schema (Product model)
+│   │   │   └── (migrations)
+│   │   ├── prisma.js
+│   │   ├── index.js
+│   │   ├── package.json
+│   │   └── Dockerfile
+│   └── order-service/        # Order processing service
+│       ├── prisma/
+│       │   ├── schema.prisma # Prisma schema (Order model)
+│       │   └── (migrations)
+│       ├── prisma.js
+│       ├── index.js
+│       ├── package.json
+│       └── Dockerfile
+├── event-bus/                # Redis event bus
+│   ├── index.js
+│   ├── package.json
+│   └── Dockerfile
+├── shared/                   # Shared utilities
+│   ├── logger.js            # Winston logger
+│   └── validators.js        # Input validators
+├── docker-compose.yml        # Orchestration
+├── .env.example             # Environment template
+├── README.md
+├── CHANGELOG.md
+├── GIT_WORKFLOW.md
+├── DEPLOYMENT.md
+├── Makefile
+└── PROJECT_SUMMARY.md
 ```
 node-microservices-ecommerce/
 ├── frontend/                  # React frontend (TypeScript + Vite)

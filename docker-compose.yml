@@ -62,11 +62,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5001
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=password123
-      - DB_NAME=ecommerce
+      - DATABASE_URL=postgresql://postgres:password123@postgres:5432/ecommerce
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
       - JWT_EXPIRE=7d
       - REDIS_HOST=redis
@@ -87,11 +83,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5002
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=password123
-      - DB_NAME=ecommerce
+      - DATABASE_URL=postgresql://postgres:password123@postgres:5432/ecommerce
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     restart: unless-stopped
@@ -114,11 +106,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5003
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=password123
-      - DB_NAME=ecommerce
+      - DATABASE_URL=postgresql://postgres:password123@postgres:5432/ecommerce
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - USER_SERVICE_URL=http://user-service:5001
